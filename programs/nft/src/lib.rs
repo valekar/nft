@@ -7,14 +7,13 @@ pub mod nft {
     use super::*;
     pub fn initialize(
         ctx: Context<Initialize>,
+        max_accounts: u16,
         go_live_date: String,
         nft_config_data: NftConfigData,
     ) -> ProgramResult {
         let nft_account = &mut ctx.accounts.nft_account;
-        let def_nft_config_data = &mut nft_account.nft_config_data;
 
         let admin = &mut ctx.accounts.admin;
-        def_nft_config_data.uuid = nft_config_data.uuid;
 
         nft_account.admin = *admin.key;
 
@@ -22,6 +21,11 @@ pub mod nft {
         //nft_account.nft_config_data.items_available = nft_config_data.items_available;
 
         let parsed_go_live_date = go_live_date.parse::<i64>();
+        // nft_account
+        //     .buyers
+        //     .resize(max_accounts as usize, Pubkey::default());
+        // let def_nft_config_data = &mut ctx.accounts.nft_account.nft_config_data;
+        // def_nft_config_data.uuid = nft_config_data.uuid;
 
         match parsed_go_live_date {
             Ok(result) => {
@@ -42,15 +46,19 @@ pub mod nft {
         msg!("updating");
         let nft_account = &mut ctx.accounts.nft_account;
         // nft_account.test = nft_config_data.uuid.clone();
-        let def_nft_config_data = &mut ctx.accounts.nft_account.nft_config_data;
+        let def_nft_config_data = &mut nft_account.clone().nft_config_data;
         def_nft_config_data.uuid = nft_config_data.uuid;
+        let admin = nft_account.admin;
+        nft_account.buyers.push(Pubkey::default());
+
         Ok(())
     }
 }
 
 #[derive(Accounts)]
+#[instruction(max_accounts : u16)]
 pub struct Initialize<'info> {
-    #[account(init, payer = admin, space = 8+32+8+8+8+8+32)]
+    #[account(init,payer = admin, space = (8+32+8+8+8+8+32*300) as usize)]
     pub nft_account: ProgramAccount<'info, NftAccountData>,
     //#[account(signer)]
     pub admin: AccountInfo<'info>,
@@ -85,6 +93,7 @@ pub enum ErrorCode {
 pub struct UpdateNftConfig<'info> {
     #[account(mut , has_one = admin)]
     pub nft_account: ProgramAccount<'info, NftAccountData>,
+    #[account(signer)]
     pub admin: AccountInfo<'info>,
     pub system_program: AccountInfo<'info>,
 }

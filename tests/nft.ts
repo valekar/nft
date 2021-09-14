@@ -26,7 +26,7 @@ describe('nft', () => {
     //const nftAccount: Keypair  = anchor.web3.Keypair.generate();
 
     const program = anchor.workspace.Nft;
-    const tx = await program.rpc.initialize(timestamps.toString(), {
+    const tx = await program.rpc.initialize(300,timestamps.toString(), {
       uuid : "nft_contract",
       price : new anchor.BN(lamports),
       itemsAvailable : new anchor.BN(100),
@@ -43,7 +43,7 @@ describe('nft', () => {
     assert.isString("tr_test", tx);
     const nftAccountData:NftAccountData = await program.account.nftAccountData.fetch(nftAccount.publicKey);
     assert.ok(nftAccountData.admin.equals(provider.wallet.publicKey));
-    console.log(nftAccountData);
+   // console.log(nftAccountData);
     //done();
   });
 
@@ -68,7 +68,8 @@ describe('nft', () => {
       },
      // signers : [nftAccount]
     });
-
+    const nftAccountData:NftAccountData = await program.account.nftAccountData.fetch(nftAccount.publicKey);
+    console.log(nftAccountData.buyers[0]);
     assert.isString("tr_test", tx);
   });
 });
